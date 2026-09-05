@@ -10,7 +10,6 @@ module.exports = {
 
   permissionError: 'You need admin permissions to run this command.',
   permissions: ['ADMINISTRATOR'],
-  requiredRoles: ['LordOfTheBot'],
 
   callback: async (message, arguments, text, client, mongo) => {
     const week = Number(arguments[0]);
@@ -72,7 +71,11 @@ module.exports = {
 
         let score = 0;
 
-        for (let gameIndex = 0; gameIndex < winners.length; gameIndex++) {
+        for (
+          let gameIndex = 0;
+          gameIndex < winners.length;
+          gameIndex++
+        ) {
           if (picksArray[gameIndex] === winners[gameIndex]) {
             const gameNumber = String(gameIndex + 1);
 
