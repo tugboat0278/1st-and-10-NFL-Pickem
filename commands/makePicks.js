@@ -12,14 +12,10 @@ module.exports = {
     const week = Number(arguments[0]);
     const picksString = arguments[1];
 
-    if (Number.isNaN(week) || week < 1 || week > 22) {
+    if (Number.isNaN(week) || week < 1 || week > 18) {
       return message.reply('Sorry, that week is invalid.');
     }
 
-    // Allows formats such as:
-    // 1,4,5,8
-    // 1.4.5.8
-    // 1-4-5-8
     const picksArray = picksString
       .split(/[^0-9]+/)
       .filter(Boolean)
@@ -63,7 +59,8 @@ module.exports = {
         );
       }
 
-      // Make sure the user selected exactly one team from every matchup.
+      const teamPicks = [];
+
       for (let i = 0; i < schedule.length; i += 2) {
         const awayNumber = i + 1;
         const homeNumber = i + 2;
@@ -76,11 +73,13 @@ module.exports = {
             `You must choose exactly one winner from Game ${(i / 2) + 1}.`
           );
         }
-      }
 
-      const teamPicks = picksArray.map(
-        pickNumber => schedule[pickNumber - 1]
-      );
+        if (pickedAway) {
+          teamPicks.push(schedule[i]);
+        } else {
+          teamPicks.push(schedule[i + 1]);
+        }
+      }
 
       await userSchema.findOneAndUpdate(
         { id: message.author.id },
