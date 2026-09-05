@@ -47,35 +47,47 @@ module.exports = {
         const awayInfo = nfl.nfl[awayTeam];
         const homeInfo = nfl.nfl[homeTeam];
 
-        let awayDisplay = awayTeam.toUpperCase();
-        let homeDisplay = homeTeam.toUpperCase();
+        const awayEmoji = awayInfo
+          ? message.guild.emojis.cache.find(
+              emoji => emoji.name === awayInfo.emojiName
+            )
+          : null;
 
-        if (awayInfo) {
-          awayDisplay =
-            `<:${awayInfo.name}:${awayInfo.id}> ${awayTeam.toUpperCase()}`;
-        }
+        const homeEmoji = homeInfo
+          ? message.guild.emojis.cache.find(
+              emoji => emoji.name === homeInfo.emojiName
+            )
+          : null;
 
-        if (homeInfo) {
-          homeDisplay =
-            `<:${homeInfo.name}:${homeInfo.id}> ${homeTeam.toUpperCase()}`;
-        }
+        const awayName = awayInfo?.name || awayTeam.toUpperCase();
+        const homeName = homeInfo?.name || homeTeam.toUpperCase();
+
+        const awayDisplay = awayEmoji
+          ? `${awayEmoji} **${awayName}**`
+          : `**${awayName}**`;
+
+        const homeDisplay = homeEmoji
+          ? `${homeEmoji} **${homeName}**`
+          : `**${homeName}**`;
 
         embed.addFields({
           name: `Game ${count}: ${awayTeam.toUpperCase()} @ ${homeTeam.toUpperCase()}`,
-          value: `${i + 1}. ${awayDisplay} vs. ${i + 2}. ${homeDisplay}`
+          value:
+            `${i + 1}. ${awayDisplay}\n` +
+            `${i + 2}. ${homeDisplay}`
         });
 
         count++;
       }
 
-      await message.channel.send({
+      return message.channel.send({
         embeds: [embed]
       });
 
     } catch (error) {
       console.error('Schedule command error:', error);
 
-      await message.reply(
+      return message.reply(
         'There was an error loading the NFL schedule.'
       );
     }
