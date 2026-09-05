@@ -1,13 +1,17 @@
 const mongoose = require('mongoose');
-//const config = require('./config.json');
-//const mongoPath = `mongodb+srv://FantasyFootballPickEm:${config.mongoToken}@ffpickem.apngl.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
-const mongoPath = `mongodb+srv://FantasyFootballPickEm:${process.env.MONGO_TOKEN}@ffpickem.apngl.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
-
 
 module.exports = async () => {
-    await mongoose.connect(mongoPath, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true
-    })
-    return mongoose
-}
+  if (mongoose.connection.readyState === 1) {
+    return mongoose;
+  }
+
+  const mongoUri = process.env.MONGO_URI;
+
+  if (!mongoUri) {
+    throw new Error('MONGO_URI environment variable is not set.');
+  }
+
+  await mongoose.connect(mongoUri);
+
+  return mongoose;
+};
