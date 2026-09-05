@@ -1,9 +1,10 @@
 const scheduleSchema = require('../schemas/schedule-schema');
+const userSchema = require('../schemas/user-schema');
 
 module.exports = {
   commands: ['setwinners'],
   alias: 'setWinners',
-  expectedArgs: '<week> <winners>',
+  expectedArgs: '<week> <winners or clear>',
   minArgs: 2,
   maxArgs: 2,
 
@@ -18,17 +19,6 @@ module.exports = {
       return message.reply('Sorry, that week is invalid.');
     }
 
-    const winners = winnersString
-      .split(',')
-      .map(winner => winner.trim())
-      .filter(Boolean);
-
-    if (winners.length === 0) {
-      return message.reply(
-        'I could not read the winning teams you entered.'
-      );
-    }
-
     try {
       await mongo();
 
@@ -39,6 +29,42 @@ module.exports = {
       if (!scheduleData) {
         return message.reply(
           `I couldn't find an NFL schedule for Week ${week}.`
+        );
+      }
+
+      if (winnersString.toLowerCase() === 'clear') {
+        await scheduleSchema.updateOne(
+          { week: String(week) },
+          {
+            $set: {
+              winners: ''
+            }
+          }
+        );
+
+        await userSchema.updateMany(
+          {},
+          {
+            $unset: {
+              [`picks.${week}`]: '',
+              [`scores.${week}`]: ''
+            }
+          }
+        );
+
+        return message.reply(
+          `✅ Week ${week} test data has been cleared. Picks, winners, and scores were removed.`
+        );
+      }
+
+      const winners = winnersString
+        .split(',')
+        .map(winner => winner.trim())
+        .filter(Boolean);
+
+      if (winners.length === 0) {
+        return message.reply(
+          'I could not read the winning teams you entered.'
         );
       }
 
@@ -80,7 +106,7 @@ module.exports = {
       console.error('setWinners command error:', error);
 
       return message.reply(
-        'There was an error saving the winners for that week.'
+        'There was an error updating the winners for that week.'
       );
     }
   }
