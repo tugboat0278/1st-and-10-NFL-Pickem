@@ -1,8 +1,8 @@
 const userSchema = require('../schemas/user-schema');
 
 module.exports = {
-  commands: ['leaderboard'],
-  alias: 'leaderboard',
+  commands: ['pickemleaderboard'],
+  alias: 'pickemleaderboard',
   expectedArgs: '',
   minArgs: 0,
   maxArgs: 0,
@@ -15,7 +15,9 @@ module.exports = {
 
       const leaderboard = users
         .map(user => {
-          const totalScore = (user.scores || []).reduce(
+          const scores = user.scores || {};
+
+          const totalScore = Object.values(scores).reduce(
             (total, score) => total + Number(score || 0),
             0
           );
@@ -29,12 +31,12 @@ module.exports = {
 
       if (leaderboard.length === 0) {
         return message.reply(
-          'There are no players on the leaderboard yet.'
+          'There are no players on the Pick’em leaderboard yet.'
         );
       }
 
       const embed = new Discord.EmbedBuilder()
-        .setTitle('🏆 NFL Pick’em Leaderboard')
+        .setTitle('🏆 1st & 10 NFL Pick’em Leaderboard')
         .setColor(Math.floor(Math.random() * 0xffffff));
 
       leaderboard.forEach((player, index) => {
@@ -49,10 +51,10 @@ module.exports = {
       });
 
     } catch (error) {
-      console.error('leaderboard command error:', error);
+      console.error('pickemleaderboard command error:', error);
 
       return message.reply(
-        'There was an error loading the leaderboard.'
+        'There was an error loading the Pick’em leaderboard.'
       );
     }
   }
