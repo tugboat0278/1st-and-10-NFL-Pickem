@@ -21,7 +21,7 @@ module.exports = {
 
     const bonusPoints = Number(arguments[2]);
 
-    if (Number.isNaN(week) || week < 1 || week > 22) {
+    if (Number.isNaN(week) || week < 1 || week > 18) {
       return message.reply('Sorry, that week is invalid.');
     }
 
@@ -50,11 +50,28 @@ module.exports = {
         );
       }
 
-      const winners = Array.isArray(scheduleData.winners)
-        ? scheduleData.winners
-        : String(scheduleData.winners)
-            .split(',')
-            .map(team => team.trim());
+      const winners = String(scheduleData.winners)
+        .split(',')
+        .map(team => team.trim())
+        .filter(Boolean);
+
+      const numberOfGames = scheduleData.games.length / 2;
+
+      const invalidBonusGame = bonusGames.find(game => {
+        const gameNumber = Number(game);
+
+        return (
+          Number.isNaN(gameNumber) ||
+          gameNumber < 1 ||
+          gameNumber > numberOfGames
+        );
+      });
+
+      if (invalidBonusGame !== undefined) {
+        return message.reply(
+          `Bonus game "${invalidBonusGame}" is not valid for Week ${week}.`
+        );
+      }
 
       const users = await userSchema.find();
 
@@ -64,18 +81,14 @@ module.exports = {
       for (const user of users) {
         const picksArray = user.picks?.[week];
 
-        if (!picksArray || picksArray.length === 0) {
+        if (!Array.isArray(picksArray) || picksArray.length === 0) {
           skippedUsers++;
           continue;
         }
 
         let score = 0;
 
-        for (
-          let gameIndex = 0;
-          gameIndex < winners.length;
-          gameIndex++
-        ) {
+        for (let gameIndex = 0; gameIndex < winners.length; gameIndex++) {
           if (picksArray[gameIndex] === winners[gameIndex]) {
             const gameNumber = String(gameIndex + 1);
 
