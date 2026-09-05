@@ -11,9 +11,8 @@ module.exports = {
 
   callback: async (message, arguments, text, client, mongo, Discord) => {
     const week = Number(arguments[0]);
-    const authorId = message.author.id;
 
-    if (Number.isNaN(week) || week < 1 || week > 22) {
+    if (Number.isNaN(week) || week < 1 || week > 18) {
       return message.reply('Sorry, that week is invalid.');
     }
 
@@ -21,7 +20,7 @@ module.exports = {
       await mongo();
 
       const user = await userSchema.findOne({
-        id: authorId
+        id: message.author.id
       });
 
       if (!user) {
@@ -40,9 +39,11 @@ module.exports = {
         );
       }
 
-      const picksArray = user.picks?.[week];
+      const picksArray =
+        user.picks?.[week] ||
+        user.picks?.[week - 1];
 
-      if (!picksArray || picksArray.length === 0) {
+      if (!Array.isArray(picksArray) || picksArray.length === 0) {
         return message.reply(
           `It doesn't look like you have any picks saved for Week ${week}.`
         );
@@ -54,26 +55,39 @@ module.exports = {
         .setTitle(`🏈 Your Picks for Week ${week}`)
         .setColor(Math.floor(Math.random() * 0xffffff));
 
-      let pickIndex = 0;
+      for (let gameIndex = 0; gameIndex < picksArray.length; gameIndex++) {
+        const scheduleIndex = gameIndex * 2;
 
-      for (let i = 0; i < schedule.length - 1; i += 2) {
-        const awayCode = schedule[i];
-        const homeCode = schedule[i + 1];
-        const pickedCode = picksArray[pickIndex];
+        const awayCode = schedule[scheduleIndex];
+        const homeCode = schedule[scheduleIndex + 1];
+        const pickedCode = picksArray[gameIndex];
 
-        const awayName = nfl.nfl[awayCode]?.name || awayCode.toUpperCase();
-        const homeName = nfl.nfl[homeCode]?.name || homeCode.toUpperCase();
-        const pickedName = nfl.nfl[pickedCode]?.name || pickedCode?.toUpperCase();
+        const pickedInfo = nfl.nfl[pickedCode];
+        const awayInfo = nfl.nfl[awayCode];
+        const homeInfo = nfl.nfl[homeCode];
 
+        const pickedEmoji = pickedInfo
+          ? message.guild.emojis.cache.find(
+              emoji => emoji.name === pickedInfo.emojiName
+            )
+          : null;
+
+        const pickedName =
+          pickedInfo?.name || pickedCode?.toUpperCase();
+
+        const opponentCode =
+          pickedCode === awayCode ? homeCode : awayCode;
+
+        const opponentInfo = nfl.nfl[opponentCode];
         const opponentName =
-          pickedCode === awayCode ? homeName : awayName;
+          opponentInfo?.name || opponentCode?.toUpperCase();
 
         embed.addFields({
-          name: `Game ${pickIndex + 1}`,
-          value: `You picked **${pickedName}** to beat **${opponentName}**`
+          name: `Game ${gameIndex + 1}: ${awayCode.toUpperCase()} @ ${homeCode.toUpperCase()}`,
+          value:
+            `${pickedEmoji ? `${pickedEmoji} ` : ''}` +
+            `You picked **${pickedName}** to beat **${opponentName}**`
         });
-
-        pickIndex++;
       }
 
       return message.channel.send({
