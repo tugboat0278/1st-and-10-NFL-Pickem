@@ -1,16 +1,16 @@
 {
-  "name": "IRO-bot",
-  "version": "1.0.0",
-  "description": "",
+  "name": "1st-and-10-nfl-pickem",
+  "version": "2.0.0",
+  "description": "NFL Pick'em bot for 1st & 10 Madden Nation",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
-    "discord.js": "^12.5.3",
-    "mongoose": "^5.13.3"
+    "discord.js": "^14.22.1",
+    "mongoose": "^8.18.0"
   }
 }
