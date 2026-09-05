@@ -1,4 +1,4 @@
-# 1st & 10 NFL Pick'em Bot
+# 🏈 1st & 10 NFL Pick'em Bot
 
 Private NFL Pick'em bot for the **1st & 10 Madden Nation** Discord server.
 
@@ -8,54 +8,128 @@ This bot runs our weekly NFL Pick'em competition using the real NFL season.
 
 League members make their picks for every NFL game each week, earn points for correct picks, and compete on the season leaderboard.
 
-## Player Commands
+The regular season supports **Weeks 1–18**.
 
-### !schedule <week>
+---
+
+# Player Commands
+
+## !schedule
+
 Shows the NFL schedule for the selected week.
 
 Example:
+
 `!schedule 1`
 
-### !makePicks <week> <picks>
+---
+
+## !makePicks
+
 Submit your picks for every game that week.
 
 Example:
-`!makePicks 1 1,4,5,8`
 
-You must select exactly one winner from every matchup.
+`!makePicks 1 1,4,5,8,10,12,14,16`
 
-### !seePicks <week>
-Shows your saved picks for that week.
+You must select exactly **one winner from every matchup**.
+
+Your picks are saved to your account and can be changed by submitting the command again.
+
+---
+
+## !seePicks
+
+Shows your saved picks for the selected week.
 
 Example:
+
 `!seePicks 1`
 
-### !seePoints <week>
-Shows everyone's scores for that week.
+---
+
+## !seePoints
+
+Shows everyone's scores for the selected week.
 
 Example:
+
 `!seePoints 1`
 
-### !leaderboard
-Shows the overall season standings.
+---
 
-## Commissioner Commands
+## !pickemleaderboard
+
+Shows the overall **1st & 10 NFL Pick'em season standings**.
+
+Example:
+
+`!pickemleaderboard`
+
+---
+
+# Commissioner Commands
 
 These commands require Discord Administrator permission.
 
-### !setWinners <week> <winners>
+## !setWinners
+
 Enters the winning teams for the selected week.
 
-### !setPoints <week> <bonus games> <points>
-Calculates everyone's points for the selected week.
+Winners must be entered in the same order as the games on that week's schedule.
 
-### !setTeamPicks <week> <team> <picks>
+---
+
+## !setWinners WEEK clear
+
+Clears the picks, winners, and scores for a selected week.
+
+Example:
+
+`!setWinners 1 clear`
+
+**WARNING:** This completely resets the Pick'em data for that week.
+
+---
+
+## !setPoints
+
+Calculates everyone's points for the selected week after the winners have been entered.
+
+The command also supports bonus games.
+
+---
+
+## !setTeamPicks
+
 Allows an administrator to enter or correct picks for a member.
 
-### !callout <week>
-Mentions members who have not submitted their picks for that week.
+---
 
-## Technology
+## !callout
+
+Checks which existing Pick'em participants have not submitted their picks for the selected week.
+
+**Note:** The bot can only check members who already have a Pick'em record in the database.
+
+---
+
+# Season Format
+
+The bot currently supports the **18-week NFL regular season**.
+
+NFL postseason support will be added separately for:
+
+- Wild Card Round
+- Divisional Round
+- Conference Championships
+- Super Bowl
+
+This keeps postseason Pick'em separate from the regular-season Week 1–18 structure.
+
+---
+
+# Technology
 
 Built with:
 
@@ -64,7 +138,9 @@ Built with:
 - MongoDB
 - Mongoose
 
-## Required Environment Variables
+---
+
+# Required Environment Variables
 
 `DJS_TOKEN` — Discord bot token
 
@@ -72,6 +148,8 @@ Built with:
 
 **Never store either secret directly in this GitHub repository.**
 
-## 1st & 10 Madden Nation
+---
 
-This project is based on the original FantasyFootballPickEm project and has been updated and customized for **1st & 10 Madden Nation**.
+# 1st & 10 Madden Nation
+
+This project is based on the original **FantasyFootballPickEm** project and has been updated and customized for **1st & 10 Madden Nation**.
