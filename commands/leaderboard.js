@@ -1,47 +1,59 @@
 const userSchema = require('../schemas/user-schema');
 
 module.exports = {
-    commands: ['leaderboard', 'Leaderboard'],
-    expectedArgs: '',
-    minArgs: 0,
-    maxArgs: 0,
-    callback: async (message, arguments, text, client, mongo, Discord) => {
-        let teamsAndScoresArray = [];
-        var randomColor = Math.floor(Math.random() * 16777215).toString(16);
+  commands: ['leaderboard'],
+  alias: 'leaderboard',
+  expectedArgs: '',
+  minArgs: 0,
+  maxArgs: 0,
 
-        const fetchFromMongoDB = async () => {
-            await mongo().then(async (mongoose) => {
-                try {
-                    console.log('Connected to MongoDB');
+  callback: async (message, arguments, text, client, mongo, Discord) => {
+    try {
+      await mongo();
 
-                    const users = await userSchema.find();
-                    users.forEach(x => {
-                        let totalScore = 0;
-                        const userScores = x.scores;
-                        userScores.forEach(individualScores => {
-                            totalScore += Number(individualScores);
-                        })
-                        teamsAndScoresArray.push([x.name, totalScore]);
-                    })
+      const users = await userSchema.find();
 
-                    teamsAndScoresArray.sort((a, b) => (a[1] < b[1]) ? 1 : -1);
-                    const embed = new Discord.MessageEmbed();
-                    embed.setTitle("Scores so far")
-                        .setColor(randomColor);
-                    teamsAndScoresArray.forEach(x => {
-                        embed.addField(x[0], x[1]);
-                    })
-                    message.channel.send(embed);
+      const leaderboard = users
+        .map(user => {
+          const totalScore = (user.scores || []).reduce(
+            (total, score) => total + Number(score || 0),
+            0
+          );
 
+          return {
+            name: user.name || 'Unknown User',
+            score: totalScore
+          };
+        })
+        .sort((a, b) => b.score - a.score);
 
-                } finally {
-                    console.log('Closing MongoDB Connection');
-                    mongoose.connection.close();
-                }
-            })
-        }
-        fetchFromMongoDB()
-        //TODO: command logic
+      if (leaderboard.length === 0) {
+        return message.reply(
+          'There are no players on the leaderboard yet.'
+        );
+      }
+
+      const embed = new Discord.EmbedBuilder()
+        .setTitle('🏆 NFL Pick’em Leaderboard')
+        .setColor(Math.floor(Math.random() * 0xffffff));
+
+      leaderboard.forEach((player, index) => {
+        embed.addFields({
+          name: `${index + 1}. ${player.name}`,
+          value: `${player.score} point${player.score === 1 ? '' : 's'}`
+        });
+      });
+
+      return message.channel.send({
+        embeds: [embed]
+      });
+
+    } catch (error) {
+      console.error('leaderboard command error:', error);
+
+      return message.reply(
+        'There was an error loading the leaderboard.'
+      );
     }
-
-}
+  }
+};
