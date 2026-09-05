@@ -10,7 +10,7 @@ module.exports = {
   callback: async (message, arguments, text, client, mongo, Discord) => {
     const week = Number(arguments[0]);
 
-    if (Number.isNaN(week) || week < 1 || week > 22) {
+    if (Number.isNaN(week) || week < 1 || week > 18) {
       return message.reply('Sorry, that week is invalid.');
     }
 
