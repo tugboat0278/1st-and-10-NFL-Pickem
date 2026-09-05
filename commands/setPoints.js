@@ -2,54 +2,118 @@ const scheduleSchema = require('../schemas/schedule-schema');
 const userSchema = require('../schemas/user-schema');
 
 module.exports = {
-    commands: ['setpoints', 'setPoints', 'SetPoints'],
-    alias: 'setWinners',
-    expectedArgs: '<week> <extra points games> <extra points>',
-    minArgs: 3,
-    maxArgs: 3,
-    permissionError: 'You need admin permissions to run this command',
-    permissions: ['ADMINISTRATOR'],
-    requiredRoles: ['LordOfTheBot'],
-    callback: async (message, arguments, text, client, mongo, Discord) => {
+  commands: ['setpoints'],
+  alias: 'setPoints',
+  expectedArgs: '<week> <bonus games> <points per bonus game>',
+  minArgs: 3,
+  maxArgs: 3,
 
-        const week = arguments[0];
-        const primeTimeArray = arguments[1].split(',');
-        const addedPoints = arguments[2];
+  permissionError: 'You need admin permissions to run this command.',
+  permissions: ['ADMINISTRATOR'],
+  requiredRoles: ['LordOfTheBot'],
 
-        const fetchFromMongoDB = async () => {
-            await mongo().then(async (mongoose) => {
-                try {
-                    console.log('Connected to MongoDB');
+  callback: async (message, arguments, text, client, mongo) => {
+    const week = Number(arguments[0]);
 
-                    const scheduleObject = await scheduleSchema.find({ week: `${week}` });
-                    let winners = scheduleObject[0].winners.split(',');
+    const bonusGames = arguments[1]
+      .split(',')
+      .map(game => game.trim())
+      .filter(Boolean);
 
-                    const users = await userSchema.find();
-                    for (let i = 0; i < users.length; i++) {
-                        let score = 0;
-                        const picksArray = users[i].picks[`${week}`];
+    const bonusPoints = Number(arguments[2]);
 
-                        for (let j = 0; j < winners.length; j++) {
-
-                            if (picksArray[j] === winners[j]) {
-
-                                if (primeTimeArray.includes(String(j + 1))) {
-                                    score += addedPoints - 1;
-                                }
-                                console.log(`scoring points for ${picksArray[j]} matching ${winners[j]} for user ${users[i].name}`)
-                                score++;
-                            }
-                        }
-                        await userSchema.updateOne({ name: `${users[i].name}` }, { $set: { ["scores." + week]: score } });
-
-                    }
-                } finally {
-                    console.log('Closing MongoDB Connection');
-                    mongoose.connection.close();
-                    message.reply(`Points have been calculated for week ${week}`)
-                }
-            })
-        }
-        fetchFromMongoDB();
+    if (Number.isNaN(week) || week < 1 || week > 22) {
+      return message.reply('Sorry, that week is invalid.');
     }
-}
+
+    if (Number.isNaN(bonusPoints) || bonusPoints < 1) {
+      return message.reply(
+        'The bonus-game point value must be a valid number.'
+      );
+    }
+
+    try {
+      await mongo();
+
+      const scheduleData = await scheduleSchema.findOne({
+        week: String(week)
+      });
+
+      if (!scheduleData) {
+        return message.reply(
+          `I couldn't find the NFL schedule for Week ${week}.`
+        );
+      }
+
+      if (!scheduleData.winners) {
+        return message.reply(
+          `The winners for Week ${week} have not been entered yet.`
+        );
+      }
+
+      const winners = Array.isArray(scheduleData.winners)
+        ? scheduleData.winners
+        : String(scheduleData.winners)
+            .split(',')
+            .map(team => team.trim());
+
+      const users = await userSchema.find();
+
+      let scoredUsers = 0;
+      let skippedUsers = 0;
+
+      for (const user of users) {
+        const picksArray = user.picks?.[week];
+
+        if (!picksArray || picksArray.length === 0) {
+          skippedUsers++;
+          continue;
+        }
+
+        let score = 0;
+
+        for (let gameIndex = 0; gameIndex < winners.length; gameIndex++) {
+          if (picksArray[gameIndex] === winners[gameIndex]) {
+            const gameNumber = String(gameIndex + 1);
+
+            if (bonusGames.includes(gameNumber)) {
+              score += bonusPoints;
+            } else {
+              score += 1;
+            }
+          }
+        }
+
+        await userSchema.updateOne(
+          { id: user.id },
+          {
+            $set: {
+              [`scores.${week}`]: score
+            }
+          }
+        );
+
+        scoredUsers++;
+      }
+
+      let response =
+        `✅ Points have been calculated for Week ${week}. ` +
+        `${scoredUsers} player${scoredUsers === 1 ? '' : 's'} scored.`;
+
+      if (skippedUsers > 0) {
+        response +=
+          ` ${skippedUsers} player${skippedUsers === 1 ? '' : 's'} ` +
+          `had no picks and were skipped.`;
+      }
+
+      return message.reply(response);
+
+    } catch (error) {
+      console.error('setPoints command error:', error);
+
+      return message.reply(
+        'There was an error calculating the weekly points.'
+      );
+    }
+  }
+};
