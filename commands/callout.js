@@ -1,33 +1,50 @@
 const userSchema = require('../schemas/user-schema');
 
 module.exports = {
-    commands: ['callout', 'callOut', 'CallOut', 'Callout'],
-    expectedArgs: '<week>',
-    minArgs: 1,
-    maxArgs: 1,
-    requiredRoles: ['LordOfTheBot'],
-    callback: async (message, arguments, text, client, mongo, Discord) => {
-        const week = arguments[0];
+  commands: ['callout'],
+  alias: 'callout',
+  expectedArgs: '<week>',
+  minArgs: 1,
+  maxArgs: 1,
+  requiredRoles: ['LordOfTheBot'],
 
-        const fetchFromMongoDB = async () => {
-            await mongo().then(async (mongoose) => {
-                try {
-                    console.log('Connected to MongoDB');
-                    const users = await userSchema.find();
-                    users.forEach(x => {
-                        const userId = x.id;
-                        if (x.picks.length !== Number(week) + 1) {
-                            message.channel.send(`<@${userId}> You havent put in your picks for week ${week}`)
-                        }
-                    })
+  callback: async (message, arguments, text, client, mongo) => {
+    const week = Number(arguments[0]);
 
-                } finally {
-                    console.log('Closing MongoDB Connection');
-                    mongoose.connection.close();
-                }
-            })
-        }
-        fetchFromMongoDB()
+    if (Number.isNaN(week) || week < 1 || week > 22) {
+      return message.reply('Sorry, that week is invalid.');
     }
 
-}
+    try {
+      await mongo();
+
+      const users = await userSchema.find();
+
+      const missingUsers = users.filter(user => {
+        const picks = user.picks?.[week];
+        return !picks || picks.length === 0;
+      });
+
+      if (missingUsers.length === 0) {
+        return message.reply(
+          `✅ Everyone has submitted their picks for Week ${week}.`
+        );
+      }
+
+      for (const user of missingUsers) {
+        if (!user.id) continue;
+
+        await message.channel.send(
+          `<@${user.id}> You haven't submitted your picks for Week ${week}.`
+        );
+      }
+
+    } catch (error) {
+      console.error('callout command error:', error);
+
+      return message.reply(
+        'There was an error checking who still needs to submit picks.'
+      );
+    }
+  }
+};
