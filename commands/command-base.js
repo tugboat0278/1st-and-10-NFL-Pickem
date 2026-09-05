@@ -1,137 +1,122 @@
-//const { prefix } = require('../config.json');
-
-const validatePermissions = (permissions) => {
-    const validPermissions = [
-        'CREATE_INSTANT_INVITE',
-        'KICK_MEMBERS',
-        'BAN_MEMBERS',
-        'ADMINISTRATOR',
-        'MANAGE_CHANNELS',
-        'MANAGE_GUILD',
-        'ADD_REACTIONS',
-        'VIEW_AUDIT_LOG',
-        'PRIORITY_SPEAKER',
-        'STREAM',
-        'VIEW_CHANNEL',
-        'SEND_MESSAGES',
-        'SEND_TTS_MESSAGES',
-        'MANAGE_MESSAGES',
-        'EMBED_LINKS',
-        'ATTACH_FILES',
-        'READ_MESSAGE_HISTORY',
-        'MENTION_EVERYONE',
-        'USE_EXTERNAL_EMOJIS',
-        'VIEW_GUILD_INSIGHTS',
-        'CONNECT',
-        'SPEAK',
-        'MUTE_MEMBERS',
-        'DEAFEN_MEMBERS',
-        'MOVE_MEMBERS',
-        'USE_VAD',
-        'CHANGE_NICKNAME',
-        'MANAGE_NICKNAMES',
-        'MANAGE_ROLES',
-        'MANAGE_WEBHOOKS',
-        'MANAGE_EMOJIS'
-    ]
-    for (const permission of permissions) {
-        if (!validPermissions.includes(permission)) {
-            throw new Error(`Unknown permission node "${permission}"`)
-        }
-    }
-}
+const { PermissionsBitField } = require('discord.js');
 
 const allCommands = {};
 
+const legacyPermissionName = (permission) => {
+  if (PermissionsBitField.Flags[permission]) {
+    return permission;
+  }
+
+  return permission
+    .toLowerCase()
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join('');
+};
+
 module.exports = (commandOptions) => {
-    let {
-        commands,
-        permissions = []
-    } = commandOptions;
+  let {
+    commands,
+    permissions = []
+  } = commandOptions;
 
-    //Ensure the command and aliases are in array
-    if (typeof commands === 'string') {
-        commands = [commands];
-    }
+  if (typeof commands === 'string') {
+    commands = [commands];
+  }
 
-    console.log(`Registering command "${commands[0]}"`)
+  if (typeof permissions === 'string') {
+    permissions = [permissions];
+  }
 
-    //Ensure the permissions are in an array and are all valid
-    if (permissions.length) {
-        if (typeof permissions === 'string') {
-            permissions = [permissions];
-        }
+  console.log(`Registering command "${commands[0]}"`);
 
-        validatePermissions(permissions);
-    }
-    for (const command of commands) {
-        allCommands[command] = {
-            ...commandOptions,
-            commands,
-            permissions
-        }
-    }
-}
+  for (const command of commands) {
+    allCommands[command.toLowerCase()] = {
+      ...commandOptions,
+      commands,
+      permissions
+    };
+  }
+};
 
 module.exports.listen = (client, mongo, Discord) => {
-    //Listen for messages
-    client.on('message', message => {
-        const { member, content, guild } = message;
+  client.on('messageCreate', async (message) => {
+    if (message.author.bot) return;
+    if (!message.guild) return;
 
-        // split on spaces
-        const arguments = content.split(/[ ]+/);
+    const { member, content, guild } = message;
 
-        //remove the command which is the first index
-        const name = arguments.shift().toLowerCase();
+    const args = content.trim().split(/\s+/);
+    const name = args.shift().toLowerCase();
 
-        if (name.startsWith('!')) {
-            const command = allCommands[name.replace('!', '')];
-            if (!command) {
-                return;
-            }
+    if (!name.startsWith('!')) return;
 
-            const {
-                permissions,
-                permissionError = "You do not have permission to run this command.",
-                requiredRoles = [],
-                minArgs = 0,
-                maxArgs = null,
-                expectedArgs,
-                callback
-            } = command;
+    const commandName = name.slice(1);
+    const command = allCommands[commandName];
 
-            //a command has been ran
+    if (!command) return;
 
-            // Ensure the user has the required permissions
-            for (const permission of permissions) {
-                if (!member.hasPermission(permission)) {
-                    message.reply(permissionError);
-                    return;
-                }
-            }
-            //Ensure the user has the required roles
-            for (const requiredRole of requiredRoles) {
-                const role = guild.roles.cache.find(role => role.name === requiredRole);
-                //console.log(guild.roles.cache);
+    const {
+      permissions = [],
+      permissionError = 'You do not have permission to run this command.',
+      requiredRoles = [],
+      minArgs = 0,
+      maxArgs = null,
+      expectedArgs = '',
+      alias,
+      callback
+    } = command;
 
-                if (!role || !member.roles.cache.has(role.id)) {
-                    message.reply(`You must have the "${requiredRole}" role to use this command`);
-                    return;
-                }
-            }
+    for (const permission of permissions) {
+      const permissionName = legacyPermissionName(permission);
+      const permissionFlag = PermissionsBitField.Flags[permissionName];
 
-            //Ensure we have the correct number of arguments
-            if (arguments.length < minArgs || (
-                maxArgs !== null && arguments.length > maxArgs
-            )) {
+      if (!permissionFlag || !member.permissions.has(permissionFlag)) {
+        await message.reply(permissionError);
+        return;
+      }
+    }
 
-                message.reply(`Incorrect syntax. Use !${command.alias} ${expectedArgs}`)
+    for (const requiredRole of requiredRoles) {
+      const role = guild.roles.cache.find(
+        role => role.name === requiredRole
+      );
 
-                return;
-            }
+      if (!role || !member.roles.cache.has(role.id)) {
+        await message.reply(
+          `You must have the "${requiredRole}" role to use this command`
+        );
+        return;
+      }
+    }
 
-            //Handle the custom command code
-            callback(message, arguments, arguments.join(' '), client, mongo, Discord);
-        }
-    })
-}
+    if (
+      args.length < minArgs ||
+      (maxArgs !== null && args.length > maxArgs)
+    ) {
+      const commandHelp = alias || commandName;
+
+      await message.reply(
+        `Incorrect syntax. Use !${commandHelp} ${expectedArgs}`.trim()
+      );
+      return;
+    }
+
+    try {
+      await callback(
+        message,
+        args,
+        args.join(' '),
+        client,
+        mongo,
+        Discord
+      );
+    } catch (error) {
+      console.error(`Error running !${commandName}:`, error);
+
+      await message.reply(
+        'There was an error while running that command.'
+      );
+    }
+  });
+};
