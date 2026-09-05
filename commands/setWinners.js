@@ -14,7 +14,7 @@ module.exports = {
     const week = Number(arguments[0]);
     const winnersString = arguments[1];
 
-    if (Number.isNaN(week) || week < 1 || week > 22) {
+    if (Number.isNaN(week) || week < 1 || week > 18) {
       return message.reply('Sorry, that week is invalid.');
     }
 
@@ -32,28 +32,35 @@ module.exports = {
     try {
       await mongo();
 
-      const schedule = await scheduleSchema.findOne({
+      const scheduleData = await scheduleSchema.findOne({
         week: String(week)
       });
 
-      if (!schedule) {
+      if (!scheduleData) {
         return message.reply(
           `I couldn't find an NFL schedule for Week ${week}.`
         );
       }
 
-      const numberOfGames = Array.isArray(schedule.games)
-        ? Math.floor(schedule.games.length / 2)
-        : 0;
+      const schedule = scheduleData.games;
+      const numberOfGames = schedule.length / 2;
 
-      if (
-        numberOfGames > 0 &&
-        winners.length !== numberOfGames
-      ) {
+      if (winners.length !== numberOfGames) {
         return message.reply(
-          `Week ${week} has ${numberOfGames} games, but you entered ` +
-          `${winners.length} winners. Please enter one winner for every game.`
+          `Week ${week} has ${numberOfGames} games, but you entered ${winners.length} winners.`
         );
+      }
+
+      for (let gameIndex = 0; gameIndex < numberOfGames; gameIndex++) {
+        const awayTeam = schedule[gameIndex * 2];
+        const homeTeam = schedule[(gameIndex * 2) + 1];
+        const winner = winners[gameIndex];
+
+        if (winner !== awayTeam && winner !== homeTeam) {
+          return message.reply(
+            `Game ${gameIndex + 1} is ${awayTeam.toUpperCase()} @ ${homeTeam.toUpperCase()}, but "${winner}" is not one of those teams.`
+          );
+        }
       }
 
       await scheduleSchema.updateOne(
