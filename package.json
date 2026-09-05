@@ -4,7 +4,7 @@
   "description": "NFL Pick'em bot for 1st & 10 Madden Nation",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node load-schedule.js && node index.js"
   },
   "engines": {
     "node": ">=20"
