@@ -13,13 +13,13 @@ const userSchema = new mongoose.Schema({
   },
 
   picks: {
-    type: [mongoose.Schema.Types.Mixed],
-    default: []
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
   },
 
   scores: {
-    type: [String],
-    default: []
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
   }
 });
 
