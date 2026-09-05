@@ -14,7 +14,7 @@ module.exports = {
     if (
       Number.isNaN(weekWanted) ||
       weekWanted < 1 ||
-      weekWanted > 22
+      weekWanted > 18
     ) {
       return message.reply('Sorry, that week is invalid.');
     }
