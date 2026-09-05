@@ -16,7 +16,7 @@ module.exports = {
     const team = arguments[1];
     const picksString = arguments[2];
 
-    if (Number.isNaN(week) || week < 1 || week > 22) {
+    if (Number.isNaN(week) || week < 1 || week > 18) {
       return message.reply('Sorry, that week is invalid.');
     }
 
@@ -63,6 +63,18 @@ module.exports = {
         );
       }
 
+      const user = await userSchema.findOne({
+        name: team
+      });
+
+      if (!user) {
+        return message.reply(
+          `I couldn't find a user named "${team}" in the Pick'em database.`
+        );
+      }
+
+      const teamPicks = [];
+
       for (let i = 0; i < schedule.length; i += 2) {
         const awayNumber = i + 1;
         const homeNumber = i + 2;
@@ -75,21 +87,13 @@ module.exports = {
             `You must choose exactly one winner from Game ${(i / 2) + 1}.`
           );
         }
+
+        if (pickedAway) {
+          teamPicks.push(schedule[i]);
+        } else {
+          teamPicks.push(schedule[i + 1]);
+        }
       }
-
-      const user = await userSchema.findOne({
-        name: team
-      });
-
-      if (!user) {
-        return message.reply(
-          `I couldn't find a user named "${team}" in the Pick'em database.`
-        );
-      }
-
-      const teamPicks = picksArray.map(
-        pickNumber => schedule[pickNumber - 1]
-      );
 
       await userSchema.updateOne(
         { id: user.id },
