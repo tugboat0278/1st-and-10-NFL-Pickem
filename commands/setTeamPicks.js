@@ -10,7 +10,6 @@ module.exports = {
 
   permissionError: 'You need admin permissions to run this command.',
   permissions: ['ADMINISTRATOR'],
-  requiredRoles: ['LordOfTheBot'],
 
   callback: async (message, arguments, text, client, mongo) => {
     const week = Number(arguments[0]);
