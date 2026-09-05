@@ -1,9 +1,25 @@
 const mongoose = require('mongoose');
 
-const scheduleSchema = mongoose.Schema({
-    week: String,
-    games: [],
-    winners: String
-})
+const scheduleSchema = new mongoose.Schema({
+  week: {
+    type: String,
+    required: true,
+    unique: true
+  },
 
-module.exports = mongoose.model('Schedule', scheduleSchema, 'Schedule');
+  games: {
+    type: [String],
+    default: []
+  },
+
+  winners: {
+    type: String,
+    default: ''
+  }
+});
+
+module.exports = mongoose.model(
+  'Schedule',
+  scheduleSchema,
+  'Schedule'
+);
