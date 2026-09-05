@@ -1,54 +1,67 @@
 const userSchema = require('../schemas/user-schema');
 
 module.exports = {
-    commands: ['seepoints', 'seePoints', 'SeePoints'],
-    expectedArgs: '<week>',
-    minArgs: 1,
-    maxArgs: 1,
-    callback: async (message, arguments, text, client, mongo, Discord) => {
-        let teamsAndScoresArray = [];
-        const week = arguments[0];
-        let randomColor = Math.floor(Math.random() * 16777215).toString(16);
+  commands: ['seepoints'],
+  alias: 'seePoints',
+  expectedArgs: '<week>',
+  minArgs: 1,
+  maxArgs: 1,
 
-        if (week < 1 || week > 22 || isNaN(Number(week))) {
-            return message.reply('Sorry, that week is invalid');
-        }
+  callback: async (message, arguments, text, client, mongo, Discord) => {
+    const week = Number(arguments[0]);
 
-        const fetchFromMongoDB = async () => {
-            await mongo().then(async (mongoose) => {
-                try {
-                    console.log('Connected to MongoDB');
-
-                    const users = await userSchema.find();
-                    for (let i = 0; i < users.length; i++) {
-                        const user = users[i];
-                        const userScore = user.scores[week];
-                        if (userScore === undefined) {
-                            break;
-                        }
-                        teamsAndScoresArray.push([user.name, userScore]);
-                    }
-                    if (teamsAndScoresArray.length != users.length) {
-                        return message.reply("Hmmm, someone doesnt have any points set for that week. Thats wierd.");
-                    }
-                    console.log(teamsAndScoresArray);
-
-                    teamsAndScoresArray.sort((a, b) => { return b[1] - a[1] });
-                    console.log(teamsAndScoresArray);
-                    const embed = new Discord.MessageEmbed();
-                    embed.setTitle(`Scores for week ${week}`)
-                        .setColor(randomColor);
-                    teamsAndScoresArray.forEach(x => {
-                        embed.addField(x[0], x[1]);
-                    })
-                    message.channel.send(embed);
-                } finally {
-                    console.log('Closing MongoDB Connection');
-                    mongoose.connection.close();
-                }
-            })
-        }
-        fetchFromMongoDB()
+    if (Number.isNaN(week) || week < 1 || week > 22) {
+      return message.reply('Sorry, that week is invalid.');
     }
 
-}
+    try {
+      await mongo();
+
+      const users = await userSchema.find();
+
+      const teamsAndScoresArray = users
+        .map(user => {
+          const score = user.scores?.[week];
+
+          if (score === undefined || score === null || score === '') {
+            return null;
+          }
+
+          return [
+            user.name || 'Unknown User',
+            Number(score)
+          ];
+        })
+        .filter(Boolean)
+        .sort((a, b) => b[1] - a[1]);
+
+      if (teamsAndScoresArray.length === 0) {
+        return message.reply(
+          `There are no scores recorded for Week ${week} yet.`
+        );
+      }
+
+      const embed = new Discord.EmbedBuilder()
+        .setTitle(`🏈 Scores for Week ${week}`)
+        .setColor(Math.floor(Math.random() * 0xffffff));
+
+      teamsAndScoresArray.forEach(([name, score], index) => {
+        embed.addFields({
+          name: `${index + 1}. ${name}`,
+          value: `${score} point${score === 1 ? '' : 's'}`
+        });
+      });
+
+      return message.channel.send({
+        embeds: [embed]
+      });
+
+    } catch (error) {
+      console.error('seePoints command error:', error);
+
+      return message.reply(
+        'There was an error loading the Week scores.'
+      );
+    }
+  }
+};
