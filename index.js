@@ -33,6 +33,19 @@ const commandBase = require(`./commands/${baseFile}`);
 
 const activePickems = new Map();
 
+/*
+  KNOWN DISCORD EMOJI IDS
+
+  The Cowboys emoji was verified directly
+  through the bot on September 6, 2026.
+
+  This gives the bot a reliable ID fallback
+  in addition to looking up emojis by name.
+*/
+const emojiIdOverrides = {
+  Dal: '1546282120454864927'
+};
+
 const readCommands = (dir) => {
   const files = fs.readdirSync(path.join(__dirname, dir));
 
@@ -48,17 +61,93 @@ const readCommands = (dir) => {
   }
 };
 
+/*
+  TEAM / EMOJI LOOKUP
+
+  The bot now:
+  1. Cleans the team code.
+  2. Finds the NFL team code without caring
+     about capitalization.
+  3. Checks a verified emoji ID first when
+     one is available.
+  4. Checks the exact emoji name.
+  5. Uses a normalized-name fallback.
+*/
 const getTeamInfo = (guild, teamCode) => {
-  const team = nfl.nfl[teamCode];
+  const cleanCode =
+    String(teamCode || '').trim();
+
+  const teamKey =
+    Object.keys(nfl.nfl).find(
+      key =>
+        key.toLowerCase() ===
+        cleanCode.toLowerCase()
+    ) || cleanCode;
+
+  const team =
+    nfl.nfl[teamKey];
+
+  let emoji = null;
+
+  const overrideId =
+    emojiIdOverrides[teamKey];
+
+  if (overrideId) {
+    emoji =
+      guild.emojis.cache.get(
+        overrideId
+      ) || null;
+  }
+
+  if (
+    !emoji &&
+    team?.emojiName
+  ) {
+    emoji =
+      guild.emojis.cache.find(
+        guildEmoji =>
+          guildEmoji.name ===
+          team.emojiName
+      ) || null;
+  }
+
+  if (
+    !emoji &&
+    team?.emojiName
+  ) {
+    const normalizeEmojiName =
+      value =>
+        String(value || '')
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, '');
+
+    const wantedName =
+      normalizeEmojiName(
+        team.emojiName
+      );
+
+    emoji =
+      guild.emojis.cache.find(
+        guildEmoji =>
+          normalizeEmojiName(
+            guildEmoji.name
+          ) === wantedName
+      ) || null;
+  }
+
+  const emojiText = emoji
+    ? emoji.animated
+      ? `<a:${emoji.name}:${emoji.id}>`
+      : `<:${emoji.name}:${emoji.id}>`
+    : '';
 
   return {
-    code: teamCode,
-    name: team?.name || teamCode.toUpperCase(),
-    emoji: team?.emojiName
-      ? guild.emojis.cache.find(
-          emoji => emoji.name === team.emojiName
-        )
-      : null
+    code: teamKey,
+    name:
+      team?.name ||
+      cleanCode.toUpperCase(),
+    emoji,
+    emojiText
   };
 };
 
@@ -105,9 +194,14 @@ const isGameOpen = (week, gameIndex) => {
     return true;
   }
 
-  const kickoffTime = new Date(kickoffData.kickoff);
+  const kickoffTime =
+    new Date(kickoffData.kickoff);
 
-  if (Number.isNaN(kickoffTime.getTime())) {
+  if (
+    Number.isNaN(
+      kickoffTime.getTime()
+    )
+  ) {
     console.error(
       `Invalid kickoff time for Week ${week}, Game ${gameNumber}`
     );
@@ -115,7 +209,8 @@ const isGameOpen = (week, gameIndex) => {
     return true;
   }
 
-  return Date.now() < kickoffTime.getTime();
+  return Date.now() <
+    kickoffTime.getTime();
 };
 
 const getNextOpenGameIndex = (
@@ -123,14 +218,20 @@ const getNextOpenGameIndex = (
   games,
   startingIndex
 ) => {
-  const numberOfGames = games.length / 2;
+  const numberOfGames =
+    games.length / 2;
 
   for (
     let index = startingIndex;
     index < numberOfGames;
     index++
   ) {
-    if (isGameOpen(week, index)) {
+    if (
+      isGameOpen(
+        week,
+        index
+      )
+    ) {
       return index;
     }
   }
@@ -145,71 +246,98 @@ const buildPickemGame = (
   games,
   gameIndex
 ) => {
-  const numberOfGames = games.length / 2;
+  const numberOfGames =
+    games.length / 2;
 
-  const awayCode = games[gameIndex * 2];
-  const homeCode = games[(gameIndex * 2) + 1];
+  const awayCode =
+    games[gameIndex * 2];
 
-  const away = getTeamInfo(
-    guild,
-    awayCode
-  );
+  const homeCode =
+    games[(gameIndex * 2) + 1];
 
-  const home = getTeamInfo(
-    guild,
-    homeCode
-  );
+  const away =
+    getTeamInfo(
+      guild,
+      awayCode
+    );
 
-  const awayDisplay = away.emoji
-    ? `${away.emoji} **${away.name}**`
-    : `**${away.name}**`;
+  const home =
+    getTeamInfo(
+      guild,
+      homeCode
+    );
 
-  const homeDisplay = home.emoji
-    ? `${home.emoji} **${home.name}**`
-    : `**${home.name}**`;
+  const awayDisplay =
+    away.emojiText
+      ? `${away.emojiText} **${away.name}**`
+      : `**${away.name}**`;
 
-  const embed = new EmbedBuilder()
-    .setTitle(`🏈 Week ${week} Pick'em`)
-    .setDescription(
-      `**Game ${gameIndex + 1} of ${numberOfGames}**\n\n` +
-      `${awayDisplay}\n` +
-      `**at**\n` +
-      `${homeDisplay}\n\n` +
-      '**Who wins?**\n\n' +
-      '🔒 This matchup automatically locks at kickoff.'
-    )
-    .setColor(0x013369)
-    .setFooter({
-      text:
-        '1st & 10 Madden Nation • NFL Pick’em'
-    });
+  const homeDisplay =
+    home.emojiText
+      ? `${home.emojiText} **${home.name}**`
+      : `**${home.name}**`;
+
+  const embed =
+    new EmbedBuilder()
+      .setTitle(
+        `🏈 Week ${week} Pick'em`
+      )
+      .setDescription(
+        `**Game ${gameIndex + 1} of ${numberOfGames}**\n\n` +
+        `${awayDisplay}\n` +
+        `**at**\n` +
+        `${homeDisplay}\n\n` +
+        '**Who wins?**\n\n' +
+        '🔒 This matchup automatically locks at kickoff.'
+      )
+      .setColor(
+        0x013369
+      )
+      .setFooter({
+        text:
+          '1st & 10 Madden Nation • NFL Pick’em'
+      });
 
   const awayButton =
     new ButtonBuilder()
       .setCustomId(
-        `pickem_choice_${userId}_${week}_${gameIndex}_${awayCode}`
+        `pickem_choice_${userId}_${week}_${gameIndex}_${away.code}`
       )
-      .setLabel(away.name)
-      .setStyle(ButtonStyle.Primary);
+      .setLabel(
+        away.name
+      )
+      .setStyle(
+        ButtonStyle.Primary
+      );
 
   const homeButton =
     new ButtonBuilder()
       .setCustomId(
-        `pickem_choice_${userId}_${week}_${gameIndex}_${homeCode}`
+        `pickem_choice_${userId}_${week}_${gameIndex}_${home.code}`
       )
-      .setLabel(home.name)
-      .setStyle(ButtonStyle.Primary);
+      .setLabel(
+        home.name
+      )
+      .setStyle(
+        ButtonStyle.Primary
+      );
 
   if (away.emoji) {
-    awayButton.setEmoji(
-      away.emoji.id
-    );
+    awayButton.setEmoji({
+      id: away.emoji.id,
+      name: away.emoji.name,
+      animated:
+        away.emoji.animated
+    });
   }
 
   if (home.emoji) {
-    homeButton.setEmoji(
-      home.emoji.id
-    );
+    homeButton.setEmoji({
+      id: home.emoji.id,
+      name: home.emoji.name,
+      animated:
+        home.emoji.animated
+    });
   }
 
   const row =
@@ -246,7 +374,8 @@ const saveSinglePick = async (
   gameIndex,
   selectedTeam
 ) => {
-  const weekKey = String(week);
+  const weekKey =
+    String(week);
 
   let user =
     await userSchema.findOne({
@@ -257,8 +386,11 @@ const saveSinglePick = async (
 
   if (
     user?.picks &&
-    typeof user.picks === 'object' &&
-    !Array.isArray(user.picks)
+    typeof user.picks ===
+      'object' &&
+    !Array.isArray(
+      user.picks
+    )
   ) {
     picksObject = {
       ...user.picks
@@ -309,7 +441,9 @@ const saveSinglePick = async (
 client.on(
   'interactionCreate',
   async interaction => {
-    if (!interaction.isButton()) {
+    if (
+      !interaction.isButton()
+    ) {
       return;
     }
 
@@ -324,7 +458,9 @@ client.on(
         )
       ) {
         const parts =
-          interaction.customId.split('_');
+          interaction.customId.split(
+            '_'
+          );
 
         const week =
           Number(parts[2]);
@@ -347,9 +483,13 @@ client.on(
           CHECK COMMISSIONER LOCK
         */
         const pickemOpen =
-          await isPickemOpen(week);
+          await isPickemOpen(
+            week
+          );
 
-        if (pickemOpen === null) {
+        if (
+          pickemOpen === null
+        ) {
           return interaction.reply({
             content:
               `I couldn't find the NFL schedule for Week ${week}.`,
@@ -368,7 +508,8 @@ client.on(
 
         const scheduleData =
           await scheduleSchema.findOne({
-            week: String(week)
+            week:
+              String(week)
           });
 
         if (
@@ -376,7 +517,8 @@ client.on(
           !Array.isArray(
             scheduleData.games
           ) ||
-          scheduleData.games.length < 2
+          scheduleData.games.length <
+            2
         ) {
           return interaction.reply({
             content:
@@ -402,7 +544,9 @@ client.on(
             0
           );
 
-        if (firstOpenGame === -1) {
+        if (
+          firstOpenGame === -1
+        ) {
           return interaction.reply({
             content:
               `🔒 Every Week ${week} game has already kicked off.\n\n` +
@@ -448,7 +592,9 @@ client.on(
         )
       ) {
         const parts =
-          interaction.customId.split('_');
+          interaction.customId.split(
+            '_'
+          );
 
         const userId =
           parts[2];
@@ -483,7 +629,9 @@ client.on(
           CHECK COMMISSIONER LOCK
         */
         const pickemOpen =
-          await isPickemOpen(week);
+          await isPickemOpen(
+            week
+          );
 
         if (
           pickemOpen === null
