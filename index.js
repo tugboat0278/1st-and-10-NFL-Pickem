@@ -81,12 +81,12 @@ const isPickemOpen = async (week) => {
 /*
   INDIVIDUAL GAME KICKOFF LOCK
 
-  Returns:
-  true  = game can still be picked
-  false = game has kicked off and is locked
+  true  = game is still open
+  false = game has kicked off
 
-  If kickoff information has not yet been added for a week,
-  the game remains open and the commissioner lock still works.
+  If kickoff information is unavailable,
+  the game stays open and the commissioner
+  can still use the manual weekly lock.
 */
 const isGameOpen = (week, gameIndex) => {
   const weekKickoffs = nflKickoffs[week];
@@ -225,37 +225,63 @@ const buildPickemGame = (
   };
 };
 
+/*
+  SAVE OR CHANGE ONE PICK
+
+  IMPORTANT:
+  picks is a MongoDB Mixed object.
+
+  Instead of updating "picks.1" directly,
+  we load the existing picks object,
+  change only the selected game,
+  and save the full object back.
+
+  This allows members to change an
+  unlocked pick without wiping out
+  their other selections.
+*/
 const saveSinglePick = async (
   discordUser,
   week,
   gameIndex,
   selectedTeam
 ) => {
+  const weekKey = String(week);
+
   let user =
     await userSchema.findOne({
       id: discordUser.id
-    });
+    }).lean();
 
-  if (!user) {
-    user = new userSchema({
-      id: discordUser.id,
-      name: discordUser.username,
-      picks: {},
-      scores: {}
-    });
+  let picksObject = {};
 
-    await user.save();
+  if (
+    user?.picks &&
+    typeof user.picks === 'object' &&
+    !Array.isArray(user.picks)
+  ) {
+    picksObject = {
+      ...user.picks
+    };
   }
 
-  let existingPicks =
-    user.picks?.[week];
+  let existingPicks = [];
 
-  if (!Array.isArray(existingPicks)) {
-    existingPicks = [];
+  if (
+    Array.isArray(
+      picksObject[weekKey]
+    )
+  ) {
+    existingPicks = [
+      ...picksObject[weekKey]
+    ];
   }
 
   existingPicks[gameIndex] =
     selectedTeam;
+
+  picksObject[weekKey] =
+    existingPicks;
 
   await userSchema.updateOne(
     {
@@ -265,9 +291,15 @@ const saveSinglePick = async (
       $set: {
         name:
           discordUser.username,
-        [`picks.${week}`]:
-          existingPicks
+        picks:
+          picksObject
+      },
+      $setOnInsert: {
+        scores: {}
       }
+    },
+    {
+      upsert: true
     }
   );
 
@@ -357,8 +389,11 @@ client.on(
           scheduleData.games;
 
         /*
-          FIND FIRST GAME THAT
-          HAS NOT KICKED OFF
+          START WITH THE FIRST GAME
+          THAT HAS NOT KICKED OFF.
+
+          Any earlier games are automatically
+          skipped and cannot be changed.
         */
         const firstOpenGame =
           getNextOpenGameIndex(
@@ -371,7 +406,7 @@ client.on(
           return interaction.reply({
             content:
               `🔒 Every Week ${week} game has already kicked off.\n\n` +
-              'No more picks can be submitted.',
+              'No more picks can be submitted or changed.',
             ephemeral: true
           });
         }
@@ -405,7 +440,7 @@ client.on(
       }
 
       /*
-        MEMBER CLICKS TEAM BUTTON
+        MEMBER CLICKS A TEAM BUTTON
       */
       if (
         interaction.customId.startsWith(
@@ -427,6 +462,10 @@ client.on(
         const selectedTeam =
           parts[5];
 
+        /*
+          MAKE SURE THIS BUTTON
+          BELONGS TO THIS MEMBER
+        */
         if (
           interaction.user.id !==
           userId
@@ -484,8 +523,16 @@ client.on(
         }
 
         /*
-          CHECK THIS GAME'S
-          REAL-LIFE KICKOFF
+          CHECK THIS SPECIFIC
+          GAME'S KICKOFF
+
+          This happens again at the exact
+          moment the member clicks a team.
+
+          So even if they opened the picker
+          before kickoff but waited until
+          after kickoff to click, the game
+          still cannot be changed.
         */
         if (
           !isGameOpen(
@@ -520,6 +567,11 @@ client.on(
             });
           }
 
+          /*
+            SKIP THE GAME THAT
+            JUST LOCKED AND MOVE
+            TO THE NEXT OPEN GAME
+          */
           const nextOpenGame =
             getNextOpenGameIndex(
               week,
@@ -599,12 +651,15 @@ client.on(
         }
 
         /*
-          SAVE THIS PICK IMMEDIATELY
+          SAVE OR CHANGE THIS PICK
+          IMMEDIATELY.
 
-          This is important because it means
-          completed picks remain saved even if
-          another game kicks off while the member
-          is still making the rest of the card.
+          An existing pick for this game
+          is replaced only if the game
+          has NOT kicked off.
+
+          Picks for every other game
+          remain untouched.
         */
         await saveSinglePick(
           interaction.user,
@@ -614,8 +669,8 @@ client.on(
         );
 
         /*
-          FIND NEXT GAME THAT
-          HAS NOT KICKED OFF
+          FIND THE NEXT GAME
+          THAT HAS NOT KICKED OFF
         */
         const nextOpenGame =
           getNextOpenGameIndex(
@@ -642,7 +697,8 @@ client.on(
               .setDescription(
                 'Your available Week ' +
                 `${week} picks have been saved.\n\n` +
-                'Any game that has already kicked off is automatically locked.\n\n' +
+                'You may change any pick until that game kicks off.\n\n' +
+                'Once a game begins, that matchup is permanently locked.\n\n' +
                 `Use \`!seePicks ${week}\` to review your selections.`
               )
               .setColor(
@@ -661,6 +717,9 @@ client.on(
           });
         }
 
+        /*
+          MOVE TO NEXT OPEN GAME
+        */
         session.gameIndex =
           nextOpenGame;
 
