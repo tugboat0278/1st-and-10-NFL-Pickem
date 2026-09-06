@@ -1,13 +1,12 @@
-// 2026 NFL regular-season kickoff times.
+// TEMPORARY KICKOFF LOCK TEST
 //
-// Times include the Eastern Time UTC offset.
-// Each matchup automatically locks when its real NFL kickoff occurs.
-//
-// Week 1 order matches the schedule stored in the Pick'em bot.
+// Game 1 is temporarily set to lock tonight at 10:05 PM Eastern.
+// After the test, restore the real Week 1 kickoff times.
 
 module.exports = {
   1: [
-    { game: 1, kickoff: '2026-09-09T20:20:00-04:00' },
+    { game: 1, kickoff: '2026-09-05T22:05:00-04:00' },
+
     { game: 2, kickoff: '2026-09-10T20:35:00-04:00' },
 
     { game: 3, kickoff: '2026-09-13T13:00:00-04:00' },
