@@ -285,7 +285,7 @@ module.exports = {
     { game: 3, kickoff: '2026-12-25T16:30:00-05:00' },
     { game: 4, kickoff: '2026-12-25T20:15:00-05:00' },
 
-    // Games 5-8 are currently flex-schedule/TBD:
+    // Games 5-8 are flex-schedule/TBD:
     // TB @ ATL
     // CIN @ IND
     // WAS @ MIN
@@ -304,7 +304,7 @@ module.exports = {
   17: [
     { game: 1, kickoff: '2026-12-31T20:15:00-05:00' },
 
-    // Games 2-5 are currently flex-schedule/TBD:
+    // Games 2-5 are flex-schedule/TBD:
     // LAR @ TB
     // DEN @ NE
     // KC @ LAC
@@ -321,5 +321,27 @@ module.exports = {
     { game: 14, kickoff: '2027-01-03T16:25:00-05:00' },
     { game: 15, kickoff: '2027-01-03T20:20:00-05:00' },
     { game: 16, kickoff: '2027-01-04T20:15:00-05:00' }
+  ],
+
+  18: [
+    // ALL WEEK 18 GAMES ARE FLEX-SCHEDULE/TBD.
+    // Add kickoff times when the NFL announces the final Week 18 schedule.
+
+    // Game 1  — NYJ @ BUF
+    // Game 2  — JAX @ IND
+    // Game 3  — LV @ KC
+    // Game 4  — TEN @ HOU
+    // Game 5  — LAC @ DEN
+    // Game 6  — MIA @ NE
+    // Game 7  — CLE @ CIN
+    // Game 8  — PIT @ BAL
+    // Game 9  — CHI @ MIN
+    // Game 10 — DET @ GB
+    // Game 11 — DAL @ WAS
+    // Game 12 — TB @ NO
+    // Game 13 — PHI @ NYG
+    // Game 14 — SEA @ LAR
+    // Game 15 — ATL @ CAR
+    // Game 16 — SF @ ARI
   ]
 };
