@@ -13,7 +13,6 @@ module.exports = {
   1: [
     { game: 1, kickoff: '2026-09-09T20:20:00-04:00' },
     { game: 2, kickoff: '2026-09-10T20:35:00-04:00' },
-
     { game: 3, kickoff: '2026-09-13T13:00:00-04:00' },
     { game: 4, kickoff: '2026-09-13T13:00:00-04:00' },
     { game: 5, kickoff: '2026-09-13T13:00:00-04:00' },
@@ -22,19 +21,16 @@ module.exports = {
     { game: 8, kickoff: '2026-09-13T13:00:00-04:00' },
     { game: 9, kickoff: '2026-09-13T13:00:00-04:00' },
     { game: 10, kickoff: '2026-09-13T13:00:00-04:00' },
-
     { game: 11, kickoff: '2026-09-13T16:25:00-04:00' },
     { game: 12, kickoff: '2026-09-13T16:25:00-04:00' },
     { game: 13, kickoff: '2026-09-13T16:25:00-04:00' },
     { game: 14, kickoff: '2026-09-13T16:25:00-04:00' },
-
     { game: 15, kickoff: '2026-09-13T20:20:00-04:00' },
     { game: 16, kickoff: '2026-09-14T20:15:00-04:00' }
   ],
 
   2: [
     { game: 1, kickoff: '2026-09-17T20:15:00-04:00' },
-
     { game: 2, kickoff: '2026-09-20T13:00:00-04:00' },
     { game: 3, kickoff: '2026-09-20T13:00:00-04:00' },
     { game: 4, kickoff: '2026-09-20T13:00:00-04:00' },
@@ -43,21 +39,17 @@ module.exports = {
     { game: 7, kickoff: '2026-09-20T13:00:00-04:00' },
     { game: 8, kickoff: '2026-09-20T13:00:00-04:00' },
     { game: 9, kickoff: '2026-09-20T13:00:00-04:00' },
-
     { game: 10, kickoff: '2026-09-20T16:05:00-04:00' },
     { game: 11, kickoff: '2026-09-20T16:05:00-04:00' },
-
     { game: 12, kickoff: '2026-09-20T16:25:00-04:00' },
     { game: 13, kickoff: '2026-09-20T16:25:00-04:00' },
     { game: 14, kickoff: '2026-09-20T16:25:00-04:00' },
-
     { game: 15, kickoff: '2026-09-20T20:20:00-04:00' },
     { game: 16, kickoff: '2026-09-21T20:15:00-04:00' }
   ],
 
   3: [
     { game: 1, kickoff: '2026-09-24T20:15:00-04:00' },
-
     { game: 2, kickoff: '2026-09-27T13:00:00-04:00' },
     { game: 3, kickoff: '2026-09-27T13:00:00-04:00' },
     { game: 4, kickoff: '2026-09-27T13:00:00-04:00' },
@@ -67,22 +59,17 @@ module.exports = {
     { game: 8, kickoff: '2026-09-27T13:00:00-04:00' },
     { game: 9, kickoff: '2026-09-27T13:00:00-04:00' },
     { game: 10, kickoff: '2026-09-27T13:00:00-04:00' },
-
     { game: 11, kickoff: '2026-09-27T16:05:00-04:00' },
     { game: 12, kickoff: '2026-09-27T16:05:00-04:00' },
-
     { game: 13, kickoff: '2026-09-27T16:25:00-04:00' },
     { game: 14, kickoff: '2026-09-27T16:25:00-04:00' },
-
     { game: 15, kickoff: '2026-09-27T20:20:00-04:00' },
     { game: 16, kickoff: '2026-09-28T20:15:00-04:00' }
   ],
 
   4: [
     { game: 1, kickoff: '2026-10-01T20:15:00-04:00' },
-
     { game: 2, kickoff: '2026-10-04T09:30:00-04:00' },
-
     { game: 3, kickoff: '2026-10-04T13:00:00-04:00' },
     { game: 4, kickoff: '2026-10-04T13:00:00-04:00' },
     { game: 5, kickoff: '2026-10-04T13:00:00-04:00' },
@@ -91,62 +78,61 @@ module.exports = {
     { game: 8, kickoff: '2026-10-04T13:00:00-04:00' },
     { game: 9, kickoff: '2026-10-04T13:00:00-04:00' },
     { game: 10, kickoff: '2026-10-04T13:00:00-04:00' },
-
     { game: 11, kickoff: '2026-10-04T16:05:00-04:00' },
-
     { game: 12, kickoff: '2026-10-04T16:25:00-04:00' },
     { game: 13, kickoff: '2026-10-04T16:25:00-04:00' },
     { game: 14, kickoff: '2026-10-04T16:25:00-04:00' },
-
     { game: 15, kickoff: '2026-10-04T20:20:00-04:00' },
     { game: 16, kickoff: '2026-10-05T20:15:00-04:00' }
   ],
 
   5: [
-    // TB @ DAL — Thursday Night Football
     { game: 1, kickoff: '2026-10-08T20:15:00-04:00' },
-
-    // PHI @ JAX — 9:30 AM ET
     { game: 2, kickoff: '2026-10-11T09:30:00-04:00' },
+    { game: 3, kickoff: '2026-10-11T13:00:00-04:00' },
+    { game: 4, kickoff: '2026-10-11T13:00:00-04:00' },
+    { game: 5, kickoff: '2026-10-11T13:00:00-04:00' },
+    { game: 6, kickoff: '2026-10-11T13:00:00-04:00' },
+    { game: 7, kickoff: '2026-10-11T13:00:00-04:00' },
+    { game: 8, kickoff: '2026-10-11T13:00:00-04:00' },
+    { game: 9, kickoff: '2026-10-11T13:00:00-04:00' },
+    { game: 10, kickoff: '2026-10-11T16:05:00-04:00' },
+    { game: 11, kickoff: '2026-10-11T16:25:00-04:00' },
+    { game: 12, kickoff: '2026-10-11T16:25:00-04:00' },
+    { game: 13, kickoff: '2026-10-11T16:25:00-04:00' },
+    { game: 14, kickoff: '2026-10-11T20:20:00-04:00' },
+    { game: 15, kickoff: '2026-10-12T20:15:00-04:00' }
+  ],
+
+  6: [
+    // SEA @ DEN — Thursday Night Football
+    { game: 1, kickoff: '2026-10-15T20:15:00-04:00' },
+
+    // HOU @ JAX — 9:30 AM ET
+    { game: 2, kickoff: '2026-10-18T09:30:00-04:00' },
 
     // Sunday — 1:00 PM ET
-    // LV @ NE
-    { game: 3, kickoff: '2026-10-11T13:00:00-04:00' },
+    { game: 3, kickoff: '2026-10-18T13:00:00-04:00' }, // NYJ @ NE
+    { game: 4, kickoff: '2026-10-18T13:00:00-04:00' }, // PIT @ TB
+    { game: 5, kickoff: '2026-10-18T13:00:00-04:00' }, // CAR @ PHI
+    { game: 6, kickoff: '2026-10-18T13:00:00-04:00' }, // CHI @ ATL
+    { game: 7, kickoff: '2026-10-18T13:00:00-04:00' }, // TEN @ IND
+    { game: 8, kickoff: '2026-10-18T13:00:00-04:00' }, // NO @ NYG
+    { game: 9, kickoff: '2026-10-18T13:00:00-04:00' }, // BAL @ CLE
 
-    // HOU @ TEN
-    { game: 4, kickoff: '2026-10-11T13:00:00-04:00' },
+    // ARI @ LAR — 4:05 PM ET
+    { game: 10, kickoff: '2026-10-18T16:05:00-04:00' },
 
-    // CLE @ NYJ
-    { game: 5, kickoff: '2026-10-11T13:00:00-04:00' },
+    // LAC @ KC — 4:25 PM ET
+    { game: 11, kickoff: '2026-10-18T16:25:00-04:00' },
 
-    // IND @ PIT
-    { game: 6, kickoff: '2026-10-11T13:00:00-04:00' },
+    // BUF @ LV — 4:25 PM ET
+    { game: 12, kickoff: '2026-10-18T16:25:00-04:00' },
 
-    // CIN @ MIA
-    { game: 7, kickoff: '2026-10-11T13:00:00-04:00' },
+    // DAL @ GB — Sunday Night Football
+    { game: 13, kickoff: '2026-10-18T20:20:00-04:00' },
 
-    // MIN @ NO
-    { game: 8, kickoff: '2026-10-11T13:00:00-04:00' },
-
-    // NYG @ WAS
-    { game: 9, kickoff: '2026-10-11T13:00:00-04:00' },
-
-    // DEN @ LAC — 4:05 PM ET
-    { game: 10, kickoff: '2026-10-11T16:05:00-04:00' },
-
-    // CHI @ GB — 4:25 PM ET
-    { game: 11, kickoff: '2026-10-11T16:25:00-04:00' },
-
-    // DET @ ARI — 4:25 PM ET
-    { game: 12, kickoff: '2026-10-11T16:25:00-04:00' },
-
-    // SF @ SEA — 4:25 PM ET
-    { game: 13, kickoff: '2026-10-11T16:25:00-04:00' },
-
-    // BAL @ ATL — Sunday Night Football
-    { game: 14, kickoff: '2026-10-11T20:20:00-04:00' },
-
-    // BUF @ LAR — Monday Night Football
-    { game: 15, kickoff: '2026-10-12T20:15:00-04:00' }
+    // WAS @ SF — Monday Night Football
+    { game: 14, kickoff: '2026-10-19T20:15:00-04:00' }
   ]
 };
