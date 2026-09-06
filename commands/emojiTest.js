@@ -1,3 +1,5 @@
+const nfl = require('../NFL_Teams.js');
+
 module.exports = {
   commands: ['emojitest'],
   alias: 'emojitest',
@@ -8,29 +10,23 @@ module.exports = {
   callback: async (message) => {
     const emojis = message.guild.emojis.cache;
 
-    const exactName = 'Dallas_Cowboys_logo';
+    const cowboysInfo = nfl.nfl.Dal;
 
-    const exactEmoji = emojis.find(
-      emoji => emoji.name === exactName
-    );
+    const exactName = cowboysInfo?.emojiName;
 
-    const cowboyEmojis = emojis.filter(
-      emoji =>
-        emoji.name.toLowerCase().includes('dallas') ||
-        emoji.name.toLowerCase().includes('cowboy')
-    );
-
-    const foundNames = cowboyEmojis.size
-      ? cowboyEmojis.map(
-          emoji => `${emoji.name} — ID: ${emoji.id}`
-        ).join('\n')
-      : 'NONE';
+    const exactEmoji = exactName
+      ? emojis.find(
+          emoji => emoji.name === exactName
+        )
+      : null;
 
     return message.reply(
-      `**Cowboys Emoji Test**\n\n` +
-      `Looking for: \`${exactName}\`\n` +
-      `Exact match: ${exactEmoji ? `YES ${exactEmoji}` : 'NO'}\n\n` +
-      `Cowboys/Dallas emojis visible to bot:\n${foundNames}`
+      `**Cowboys Pick'em Emoji Test**\n\n` +
+      `Team code: \`Dal\`\n` +
+      `Team name from NFL_Teams.js: \`${cowboysInfo?.name || 'NOT FOUND'}\`\n` +
+      `Emoji name from NFL_Teams.js: \`${exactName || 'NOT FOUND'}\`\n` +
+      `Exact Discord emoji match: ${exactEmoji ? `YES ${exactEmoji}` : 'NO'}\n` +
+      `Emoji ID: \`${exactEmoji?.id || 'NOT FOUND'}\``
     );
   }
 };
