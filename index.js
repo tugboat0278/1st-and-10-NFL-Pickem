@@ -30,14 +30,6 @@ const client = new Client({
 const baseFile = 'command-base.js';
 const commandBase = require(`./commands/${baseFile}`);
 
-/*
-  Keeps track of members who are currently making picks.
-
-  Key:
-  userID_week
-
-  Each member gets their own private Pick'em session.
-*/
 const activePickems = new Map();
 
 const readCommands = (dir) => {
@@ -129,7 +121,10 @@ const buildPickemGame = (
   }
 
   const row = new ActionRowBuilder()
-    .addComponents(awayButton, homeButton);
+    .addComponents(
+      awayButton,
+      homeButton
+    );
 
   return {
     embeds: [embed],
@@ -137,10 +132,19 @@ const buildPickemGame = (
   };
 };
 
-/*
-  Handles the shared "Make My Picks" panel
-  and each member's private picking session.
-*/
+const isPickemOpen = async (week) => {
+  const scheduleData =
+    await scheduleSchema.collection.findOne({
+      week: String(week)
+    });
+
+  if (!scheduleData) {
+    return null;
+  }
+
+  return scheduleData.pickemOpen !== false;
+};
+
 client.on('interactionCreate', async interaction => {
   if (!interaction.isButton()) {
     return;
@@ -148,24 +152,57 @@ client.on('interactionCreate', async interaction => {
 
   try {
     /*
-      MEMBER CLICKS THE SHARED WEEKLY PANEL
+      MEMBER CLICKS THE PUBLIC
+      "MAKE MY PICKS" BUTTON
     */
-    if (interaction.customId.startsWith('pickem_start_')) {
-      const parts = interaction.customId.split('_');
+    if (
+      interaction.customId.startsWith(
+        'pickem_start_'
+      )
+    ) {
+      const parts =
+        interaction.customId.split('_');
+
       const week = Number(parts[2]);
 
-      if (Number.isNaN(week) || week < 1 || week > 18) {
+      if (
+        Number.isNaN(week) ||
+        week < 1 ||
+        week > 18
+      ) {
         return interaction.reply({
-          content: 'Sorry, that Pick’em week is invalid.',
+          content:
+            'Sorry, that Pick’em week is invalid.',
           ephemeral: true
         });
       }
 
       await mongo();
 
-      const scheduleData = await scheduleSchema.findOne({
-        week: String(week)
-      });
+      const pickemOpen =
+        await isPickemOpen(week);
+
+      if (pickemOpen === null) {
+        return interaction.reply({
+          content:
+            `I couldn't find the NFL schedule for Week ${week}.`,
+          ephemeral: true
+        });
+      }
+
+      if (!pickemOpen) {
+        return interaction.reply({
+          content:
+            `🔒 Week ${week} Pick'em is CLOSED.\n\n` +
+            'Picks can no longer be submitted or changed.',
+          ephemeral: true
+        });
+      }
+
+      const scheduleData =
+        await scheduleSchema.findOne({
+          week: String(week)
+        });
 
       if (
         !scheduleData ||
@@ -173,7 +210,8 @@ client.on('interactionCreate', async interaction => {
         scheduleData.games.length < 2
       ) {
         return interaction.reply({
-          content: `I couldn't find the NFL schedule for Week ${week}.`,
+          content:
+            `I couldn't find the NFL schedule for Week ${week}.`,
           ephemeral: true
         });
       }
@@ -205,15 +243,23 @@ client.on('interactionCreate', async interaction => {
     /*
       MEMBER CLICKS A TEAM BUTTON
     */
-    if (interaction.customId.startsWith('pickem_choice_')) {
-      const parts = interaction.customId.split('_');
+    if (
+      interaction.customId.startsWith(
+        'pickem_choice_'
+      )
+    ) {
+      const parts =
+        interaction.customId.split('_');
 
       const userId = parts[2];
       const week = Number(parts[3]);
-      const selectedGameIndex = Number(parts[4]);
+      const selectedGameIndex =
+        Number(parts[4]);
       const selectedTeam = parts[5];
 
-      if (interaction.user.id !== userId) {
+      if (
+        interaction.user.id !== userId
+      ) {
         return interaction.reply({
           content:
             'This Pick’em session belongs to another member.',
@@ -221,18 +267,68 @@ client.on('interactionCreate', async interaction => {
         });
       }
 
-      const sessionKey = `${userId}_${week}`;
-      const session = activePickems.get(sessionKey);
+      await mongo();
 
-      if (!session) {
+      /*
+        CHECK THE LOCK AGAIN BEFORE
+        ALLOWING EACH PICK
+      */
+      const pickemOpen =
+        await isPickemOpen(week);
+
+      if (pickemOpen === null) {
         return interaction.reply({
           content:
-            `Your Pick’em session is no longer active. Click **Make My Picks** on the Week ${week} panel to start again.`,
+            `I couldn't find the NFL schedule for Week ${week}.`,
           ephemeral: true
         });
       }
 
-      if (selectedGameIndex !== session.gameIndex) {
+      if (!pickemOpen) {
+        const sessionKey =
+          `${userId}_${week}`;
+
+        activePickems.delete(sessionKey);
+
+        return interaction.update({
+          embeds: [
+            new EmbedBuilder()
+              .setTitle(
+                `🔒 Week ${week} Pick'em Closed`
+              )
+              .setDescription(
+                'The commissioner has closed Pick’em for this week.\n\n' +
+                'No additional picks or changes can be submitted.'
+              )
+              .setColor(0x808080)
+              .setFooter({
+                text:
+                  '1st & 10 Madden Nation • NFL Pick’em'
+              })
+          ],
+          components: []
+        });
+      }
+
+      const sessionKey =
+        `${userId}_${week}`;
+
+      const session =
+        activePickems.get(sessionKey);
+
+      if (!session) {
+        return interaction.reply({
+          content:
+            `Your Pick’em session is no longer active. ` +
+            `Click **Make My Picks** on the Week ${week} panel to start again.`,
+          ephemeral: true
+        });
+      }
+
+      if (
+        selectedGameIndex !==
+        session.gameIndex
+      ) {
         return interaction.reply({
           content:
             'That matchup has already been completed.',
@@ -240,7 +336,10 @@ client.on('interactionCreate', async interaction => {
         });
       }
 
-      session.picks[session.gameIndex] = selectedTeam;
+      session.picks[
+        session.gameIndex
+      ] = selectedTeam;
+
       session.gameIndex++;
 
       const numberOfGames =
@@ -249,33 +348,71 @@ client.on('interactionCreate', async interaction => {
       /*
         MORE GAMES LEFT
       */
-      if (session.gameIndex < numberOfGames) {
-        const nextGame = buildPickemGame(
-          interaction.guild,
-          interaction.user.id,
-          week,
-          session.games,
-          session.gameIndex
+      if (
+        session.gameIndex <
+        numberOfGames
+      ) {
+        const nextGame =
+          buildPickemGame(
+            interaction.guild,
+            interaction.user.id,
+            week,
+            session.games,
+            session.gameIndex
+          );
+
+        activePickems.set(
+          sessionKey,
+          session
         );
 
-        activePickems.set(sessionKey, session);
-
-        return interaction.update(nextGame);
+        return interaction.update(
+          nextGame
+        );
       }
 
       /*
-        ALL PICKS COMPLETED — SAVE THEM
+        CHECK LOCK ONE FINAL TIME
+        BEFORE SAVING THE CARD
       */
-      await mongo();
+      const finalLockCheck =
+        await isPickemOpen(week);
 
-      let user = await userSchema.findOne({
-        id: interaction.user.id
-      });
+      if (!finalLockCheck) {
+        activePickems.delete(
+          sessionKey
+        );
+
+        return interaction.update({
+          embeds: [
+            new EmbedBuilder()
+              .setTitle(
+                `🔒 Week ${week} Pick'em Closed`
+              )
+              .setDescription(
+                'Pick’em closed before your card was submitted.\n\n' +
+                'Your selections were not saved.'
+              )
+              .setColor(0x808080)
+          ],
+          components: []
+        });
+      }
+
+      /*
+        ALL PICKS COMPLETED
+        SAVE THEM
+      */
+      let user =
+        await userSchema.findOne({
+          id: interaction.user.id
+        });
 
       if (!user) {
         user = new userSchema({
           id: interaction.user.id,
-          name: interaction.user.username,
+          name:
+            interaction.user.username,
           picks: {},
           scores: {}
         });
@@ -289,26 +426,34 @@ client.on('interactionCreate', async interaction => {
         },
         {
           $set: {
-            name: interaction.user.username,
-            [`picks.${week}`]: session.picks
+            name:
+              interaction.user.username,
+            [`picks.${week}`]:
+              session.picks
           }
         }
       );
 
-      activePickems.delete(sessionKey);
+      activePickems.delete(
+        sessionKey
+      );
 
-      const completeEmbed = new EmbedBuilder()
-        .setTitle(`✅ Week ${week} Picks Submitted!`)
-        .setDescription(
-          `You successfully picked all **${numberOfGames} games**.\n\n` +
-          `Your picks have been saved under your Discord account.\n\n` +
-          `Use \`!seePicks ${week}\` to review your selections.\n\n` +
-          `If you want to change them, click **Make My Picks** on the Week ${week} panel again and complete a new card.`
-        )
-        .setColor(0x00a651)
-        .setFooter({
-          text: '1st & 10 Madden Nation • NFL Pick’em'
-        });
+      const completeEmbed =
+        new EmbedBuilder()
+          .setTitle(
+            `✅ Week ${week} Picks Submitted!`
+          )
+          .setDescription(
+            `You successfully picked all **${numberOfGames} games**.\n\n` +
+            'Your picks have been saved under your Discord account.\n\n' +
+            `Use \`!seePicks ${week}\` to review your selections.\n\n` +
+            `If you want to change them, click **Make My Picks** on the Week ${week} panel again before Pick'em closes.`
+          )
+          .setColor(0x00a651)
+          .setFooter({
+            text:
+              '1st & 10 Madden Nation • NFL Pick’em'
+          });
 
       return interaction.update({
         embeds: [completeEmbed],
@@ -317,9 +462,15 @@ client.on('interactionCreate', async interaction => {
     }
 
   } catch (error) {
-    console.error('Pickem interaction error:', error);
+    console.error(
+      'Pickem interaction error:',
+      error
+    );
 
-    if (interaction.replied || interaction.deferred) {
+    if (
+      interaction.replied ||
+      interaction.deferred
+    ) {
       return interaction.followUp({
         content:
           'There was an error processing your Pick’em.',
@@ -349,4 +500,6 @@ client.once('ready', () => {
   );
 });
 
-client.login(process.env.DJS_TOKEN);
+client.login(
+  process.env.DJS_TOKEN
+);
