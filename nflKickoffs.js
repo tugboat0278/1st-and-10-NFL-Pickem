@@ -1,28 +1,29 @@
-  ],
+  ,
 
-  16: [
-    { game: 1, kickoff: '2026-12-24T20:15:00-05:00' }, // HOU @ PHI
+  17: [
+    { game: 1, kickoff: '2026-12-31T20:15:00-05:00' }, // BAL @ CIN
 
-    { game: 2, kickoff: '2026-12-25T13:00:00-05:00' }, // GB @ CHI
-    { game: 3, kickoff: '2026-12-25T16:30:00-05:00' }, // BUF @ DEN
-    { game: 4, kickoff: '2026-12-25T20:15:00-05:00' }, // LAR @ SEA
-
-    // Games 5-8 are currently flex-schedule/TBD:
-    // TB @ ATL
-    // CIN @ IND
-    // WAS @ MIN
-    // CAR @ PIT
+    // Games 2-5 are currently flex-schedule/TBD:
+    // LAR @ TB
+    // DEN @ NE
+    // KC @ LAC
+    // WAS @ JAX
     // Add them once the NFL announces their final kickoff times.
 
-    { game: 9, kickoff: '2026-12-27T13:00:00-05:00' }, // CLE @ BAL
-    { game: 10, kickoff: '2026-12-27T13:00:00-05:00' }, // LAC @ MIA
-    { game: 11, kickoff: '2026-12-27T13:00:00-05:00' }, // ARI @ NO
-    { game: 12, kickoff: '2026-12-27T13:00:00-05:00' }, // NE @ NYJ
+    { game: 6, kickoff: '2027-01-03T13:00:00-05:00' }, // BUF @ MIA
+    { game: 7, kickoff: '2027-01-03T13:00:00-05:00' }, // PIT @ TEN
+    { game: 8, kickoff: '2027-01-03T13:00:00-05:00' }, // MIN @ NYJ
+    { game: 9, kickoff: '2027-01-03T13:00:00-05:00' }, // NO @ ATL
+    { game: 10, kickoff: '2027-01-03T13:00:00-05:00' }, // SEA @ CAR
+    { game: 11, kickoff: '2027-01-03T13:00:00-05:00' }, // IND @ CLE
+    { game: 12, kickoff: '2027-01-03T13:00:00-05:00' }, // NYG @ DAL
 
-    { game: 13, kickoff: '2026-12-27T16:05:00-05:00' }, // TEN @ LV
-    { game: 14, kickoff: '2026-12-27T16:25:00-05:00' }, // SF @ KC
-    { game: 15, kickoff: '2026-12-27T20:20:00-05:00' }, // JAX @ DAL
+    { game: 13, kickoff: '2027-01-03T16:05:00-05:00' }, // LV @ ARI
 
-    { game: 16, kickoff: '2026-12-28T20:15:00-05:00' } // NYG @ DET
+    { game: 14, kickoff: '2027-01-03T16:25:00-05:00' }, // DET @ CHI
+
+    { game: 15, kickoff: '2027-01-03T20:20:00-05:00' }, // PHI @ SF
+
+    { game: 16, kickoff: '2027-01-04T20:15:00-05:00' } // HOU @ GB
   ]
 };
