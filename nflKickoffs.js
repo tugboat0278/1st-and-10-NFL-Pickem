@@ -94,5 +94,61 @@ module.exports = {
     // Monday Night Football
     // NYG @ LAR
     { game: 16, kickoff: '2026-09-21T20:15:00-04:00' }
+  ],
+
+  3: [
+    // Thursday, September 24
+    // ATL @ GB
+    { game: 1, kickoff: '2026-09-24T20:15:00-04:00' },
+
+    // Sunday, September 27 — 1:00 PM ET
+    // KC @ MIA
+    { game: 2, kickoff: '2026-09-27T13:00:00-04:00' },
+
+    // HOU @ IND
+    { game: 3, kickoff: '2026-09-27T13:00:00-04:00' },
+
+    // TEN @ NYG
+    { game: 4, kickoff: '2026-09-27T13:00:00-04:00' },
+
+    // NE @ JAX
+    { game: 5, kickoff: '2026-09-27T13:00:00-04:00' },
+
+    // CIN @ PIT
+    { game: 6, kickoff: '2026-09-27T13:00:00-04:00' },
+
+    // CAR @ CLE
+    { game: 7, kickoff: '2026-09-27T13:00:00-04:00' },
+
+    // NYJ @ DET
+    { game: 8, kickoff: '2026-09-27T13:00:00-04:00' },
+
+    // SEA @ WAS
+    { game: 9, kickoff: '2026-09-27T13:00:00-04:00' },
+
+    // LAC @ BUF
+    { game: 10, kickoff: '2026-09-27T13:00:00-04:00' },
+
+    // Sunday, September 27 — 4:05 PM ET
+    // MIN @ TB
+    { game: 11, kickoff: '2026-09-27T16:05:00-04:00' },
+
+    // ARI @ SF
+    { game: 12, kickoff: '2026-09-27T16:05:00-04:00' },
+
+    // Sunday, September 27 — 4:25 PM ET
+    // BAL @ DAL
+    { game: 13, kickoff: '2026-09-27T16:25:00-04:00' },
+
+    // LV @ NO
+    { game: 14, kickoff: '2026-09-27T16:25:00-04:00' },
+
+    // Sunday Night Football
+    // LAR @ DEN
+    { game: 15, kickoff: '2026-09-27T20:20:00-04:00' },
+
+    // Monday Night Football
+    // PHI @ CHI
+    { game: 16, kickoff: '2026-09-28T20:15:00-04:00' }
   ]
 };
