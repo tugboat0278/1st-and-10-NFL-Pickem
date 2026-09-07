@@ -20,18 +20,18 @@ module.exports = {
     try {
       await mongo();
 
-      // Find the League Members role.
+      // Find the League Member role.
       const leagueRole = message.guild.roles.cache.find(
-        role => role.name.toLowerCase() === 'league members'
+        role => role.name.toLowerCase() === 'league member'
       );
 
       if (!leagueRole) {
         return message.reply(
-          'I could not find the "League Members" role.'
+          'I could not find the "League Member" role.'
         );
       }
 
-      // Make sure the bot has the current server member list.
+      // Fetch the current server member list.
       await message.guild.members.fetch();
 
       const leagueMembers = leagueRole.members.filter(
@@ -40,11 +40,49 @@ module.exports = {
 
       if (leagueMembers.size === 0) {
         return message.reply(
-          'I found the League Members role, but there are no members assigned to it.'
+          'I found the League Member role, but nobody has that role.'
         );
       }
 
       const users = await userSchema.find();
+
+      // Get this week's schedule so we know exactly
+      // how many games must be picked.
+      const scheduleCollection = message.client.mongoConnection
+        ? message.client.mongoConnection.collection('Schedule')
+        : null;
+
+      let gameCount = 0;
+
+      if (scheduleCollection) {
+        const schedule = await scheduleCollection.findOne({ week });
+
+        if (schedule?.games && Array.isArray(schedule.games)) {
+          gameCount = schedule.games.length;
+        }
+      }
+
+      // Fallback: determine the largest number of saved
+      // picks for this week if schedule count is unavailable.
+      if (!gameCount) {
+        gameCount = Math.max(
+          ...users.map(user => {
+            const picks = user.picks?.[week];
+
+            if (!Array.isArray(picks)) {
+              return 0;
+            }
+
+            return picks.filter(
+              pick =>
+                pick !== null &&
+                pick !== undefined &&
+                pick !== ''
+            ).length;
+          }),
+          0
+        );
+      }
 
       const completed = [];
       const incomplete = [];
@@ -62,47 +100,14 @@ module.exports = {
           continue;
         }
 
-        // A normal NFL week can have up to 16 games.
-        // Count actual saved selections rather than just array length.
         const submittedPicks = picks.filter(
-          pick => pick !== null && pick !== undefined && pick !== ''
+          pick =>
+            pick !== null &&
+            pick !== undefined &&
+            pick !== ''
         ).length;
 
-        // Get the number of games for this week from the Schedule collection.
-        let gameCount = 0;
-
-        try {
-          const schedule = await message.client.mongoConnection
-            ?.collection('Schedule')
-            ?.findOne({ week });
-
-          if (schedule?.games && Array.isArray(schedule.games)) {
-            gameCount = schedule.games.length;
-          }
-        } catch (error) {
-          // Fall back below if this connection isn't available.
-        }
-
-        // If game count could not be retrieved, use the highest
-        // number of picks currently stored for the week as a fallback.
-        if (!gameCount) {
-          gameCount = Math.max(
-            ...users.map(dbUser => {
-              const userPicks = dbUser.picks?.[week];
-              return Array.isArray(userPicks)
-                ? userPicks.filter(
-                    pick =>
-                      pick !== null &&
-                      pick !== undefined &&
-                      pick !== ''
-                  ).length
-                : 0;
-            }),
-            submittedPicks
-          );
-        }
-
-        if (submittedPicks >= gameCount && gameCount > 0) {
+        if (gameCount > 0 && submittedPicks >= gameCount) {
           completed.push(`<@${member.id}>`);
         } else {
           incomplete.push(
@@ -111,9 +116,9 @@ module.exports = {
         }
       }
 
-      const makeSection = (title, members, emptyText) => {
+      const makeSection = (title, members) => {
         if (members.length === 0) {
-          return `${title}\n${emptyText}`;
+          return `${title}\nNone`;
         }
 
         return `${title}\n${members.join('\n')}`;
@@ -125,24 +130,21 @@ module.exports = {
 
         makeSection(
           `✅ **Completed Picks (${completed.length})**`,
-          completed,
-          'None'
+          completed
         ) +
 
         `\n\n` +
 
         makeSection(
           `🟡 **Incomplete Picks (${incomplete.length})**`,
-          incomplete,
-          'None'
+          incomplete
         ) +
 
         `\n\n` +
 
         makeSection(
           `❌ **No Picks (${noPicks.length})**`,
-          noPicks,
-          'None'
+          noPicks
         );
 
       return message.channel.send(response);
