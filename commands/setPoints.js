@@ -4,9 +4,9 @@ const userSchema = require('../schemas/user-schema');
 module.exports = {
   commands: ['setpoints'],
   alias: 'setPoints',
-  expectedArgs: '<week> <bonus games> <points per bonus game>',
-  minArgs: 3,
-  maxArgs: 3,
+  expectedArgs: '<week>',
+  minArgs: 1,
+  maxArgs: 1,
 
   permissionError: 'You need admin permissions to run this command.',
   permissions: ['ADMINISTRATOR'],
@@ -14,21 +14,8 @@ module.exports = {
   callback: async (message, arguments, text, client, mongo) => {
     const week = Number(arguments[0]);
 
-    const bonusGames = arguments[1]
-      .split(',')
-      .map(game => game.trim())
-      .filter(Boolean);
-
-    const bonusPoints = Number(arguments[2]);
-
     if (Number.isNaN(week) || week < 1 || week > 18) {
       return message.reply('Sorry, that week is invalid.');
-    }
-
-    if (Number.isNaN(bonusPoints) || bonusPoints < 1) {
-      return message.reply(
-        'The bonus-game point value must be a valid number.'
-      );
     }
 
     try {
@@ -55,24 +42,6 @@ module.exports = {
         .map(team => team.trim())
         .filter(Boolean);
 
-      const numberOfGames = scheduleData.games.length / 2;
-
-      const invalidBonusGame = bonusGames.find(game => {
-        const gameNumber = Number(game);
-
-        return (
-          Number.isNaN(gameNumber) ||
-          gameNumber < 1 ||
-          gameNumber > numberOfGames
-        );
-      });
-
-      if (invalidBonusGame !== undefined) {
-        return message.reply(
-          `Bonus game "${invalidBonusGame}" is not valid for Week ${week}.`
-        );
-      }
-
       const users = await userSchema.find();
 
       let scoredUsers = 0;
@@ -90,13 +59,7 @@ module.exports = {
 
         for (let gameIndex = 0; gameIndex < winners.length; gameIndex++) {
           if (picksArray[gameIndex] === winners[gameIndex]) {
-            const gameNumber = String(gameIndex + 1);
-
-            if (bonusGames.includes(gameNumber)) {
-              score += bonusPoints;
-            } else {
-              score += 1;
-            }
+            score += 1;
           }
         }
 
