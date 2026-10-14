@@ -82,9 +82,14 @@ module.exports = {
         const homeTeam = schedule[(gameIndex * 2) + 1];
         const winner = winners[gameIndex];
 
-        if (winner !== awayTeam && winner !== homeTeam) {
+        // TIE is allowed when an NFL game ends in a tie.
+        if (
+          winner !== awayTeam &&
+          winner !== homeTeam &&
+          winner.toUpperCase() !== 'TIE'
+        ) {
           return message.reply(
-            `Game ${gameIndex + 1} is ${awayTeam.toUpperCase()} @ ${homeTeam.toUpperCase()}, but "${winner}" is not one of those teams.`
+            `Game ${gameIndex + 1} is ${awayTeam.toUpperCase()} @ ${homeTeam.toUpperCase()}, but "${winner}" is not one of those teams or TIE.`
           );
         }
       }
@@ -93,7 +98,11 @@ module.exports = {
         { week: String(week) },
         {
           $set: {
-            winners: winners.join(',')
+            winners: winners
+              .map(winner =>
+                winner.toUpperCase() === 'TIE' ? 'TIE' : winner
+              )
+              .join(',')
           }
         }
       );
