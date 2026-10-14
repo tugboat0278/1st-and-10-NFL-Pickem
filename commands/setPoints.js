@@ -58,6 +58,12 @@ module.exports = {
         let score = 0;
 
         for (let gameIndex = 0; gameIndex < winners.length; gameIndex++) {
+
+          // A tied NFL game awards no points to either team.
+          if (winners[gameIndex].toUpperCase() === 'TIE') {
+            continue;
+          }
+
           if (picksArray[gameIndex] === winners[gameIndex]) {
             score += 1;
           }
