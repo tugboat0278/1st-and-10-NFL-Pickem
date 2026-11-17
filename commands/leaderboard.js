@@ -12,9 +12,20 @@ module.exports = {
     try {
       await mongo();
 
+      if (!message.guild) {
+        return message.reply(
+          'This command must be used inside a Discord server.'
+        );
+      }
+
+      // Get the current members of the Discord server.
+      // This excludes people who have left the server.
+      const guildMembers = await message.guild.members.fetch();
+
       const users = await userSchema.find();
 
       const leaderboard = users
+        .filter(user => guildMembers.has(String(user.id)))
         .map(user => {
           const scores = user.scores || {};
 
@@ -32,11 +43,11 @@ module.exports = {
 
       if (leaderboard.length === 0) {
         return message.reply(
-          'There are no players on the Pick’em leaderboard yet.'
+          'There are no current server members on the Pick’em leaderboard yet.'
         );
       }
 
-      // Discord allows a maximum of 25 fields per embed.
+      // Discord allows up to 25 fields per embed.
       const playersPerPage = 25;
       const totalPages = Math.ceil(leaderboard.length / playersPerPage);
 
